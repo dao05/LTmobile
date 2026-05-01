@@ -1,0 +1,23 @@
+{
+  "rooms": [],
+  "tenants": [],
+  "invoices": [],
+  "contracts": [],
+  "users": [
+    {
+      "id": 1,
+      "name": "Quản trị viên",
+      "email": "admin@rental.com",
+      "role": "admin",
+      "status": "active"
+    },
+    {
+      "id": 2,
+      "name": "Quản lý viên",
+      "email": "manager@rental.com",
+      "role": "manager",
+      "status": "active"
+    }
+  ],
+  "updatedAt": null
+}
