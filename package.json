@@ -5,10 +5,11 @@
   "main": "index.js",
   "scripts": {
     "api": "node server/file-server.js",
-    "start": "expo start --max-workers 1 --port 8082",
-    "android": "expo start --android --max-workers 1 --port 8082",
-    "ios": "expo start --ios --max-workers 1 --port 8082",
-    "web": "expo start --web --max-workers 1 --port 8082"
+    "start": "node scripts/run-expo.js start --max-workers 1 --port 8082",
+    "start:tunnel": "node scripts/run-expo.js start --tunnel --max-workers 1 --port 8082",
+    "android": "node scripts/run-expo.js start --android --max-workers 1 --port 8082",
+    "ios": "node scripts/run-expo.js start --ios --max-workers 1 --port 8082",
+    "web": "node scripts/run-expo.js start --web --max-workers 1 --port 8082"
   },
   "overrides": {
     "@react-native-picker/picker": "2.11.1"
