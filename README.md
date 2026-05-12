@@ -89,28 +89,36 @@ Chạy trên Android Emulator nếu đã cài giả lập
 6.1. Giao diện đăng nhập, đăng ký:
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/d7bbe9df-0e09-4f06-81a9-9b5100339a24" />
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/a0bac9e2-5763-4fcc-9597-18bb37bb496f" />
+   
 6.2. Giao diện trang chủ:
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/9c5b7d19-bd48-4151-b7be-1a37f99c0a52" />
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/330afa55-5ede-4cdc-a20b-4787161d0e76" />
+   
 6.3. Giao diện thông báo:
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/f6161f3c-f065-4189-9d92-b98c0a80fa00" />
 6.4. Giao diện quản lý phòng:
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/b70abd18-3a64-4787-9832-88e4c7d17cbd" />
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/f1807bf9-1615-4afd-82de-76546fb6f5ce" />
+   
 6.5. Giao diện quản lý khách thuê:
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/77b971ab-3486-4791-aaaa-7508cd52244c" />
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/f89a337f-e4c6-4c76-8cb1-6e0b5010fa23" />
+   
 6.6. Giao diện quản lý hóa đơn:
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/fe35067f-18b2-49a5-a53d-5aecf531ccdb" />
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/64e944ce-a562-4d15-8d73-9591427a4ec0" />
+   
 6.7. Giao diện quản lý hợp đồng:
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/03bf9a34-d9d5-45d5-a49c-4216cd28e3eb" />
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/85b69def-1200-41e3-893e-59b69dcde1ad" />
+   
 6.8. Giao diện báo cáo:
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/99070627-7a87-41b5-9c08-f9a4e3842926" />
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/552ac9f1-dde6-49ed-85af-2f2a6934b151" />
+   
 6.9. Giao diện phân quyền:
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/27b0d501-74ea-4653-81b7-f06ed8ba6cd3" />
+   
 6.10. Giao diện người dùng:
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/21187024-ca3d-4413-b50a-9d7fb9042842" />
    <img width="1170" height="2532" alt="image" src="https://github.com/user-attachments/assets/d0df2e1d-4e52-4590-ad36-90142ed637cf" />
