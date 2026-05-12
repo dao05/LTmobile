@@ -173,6 +173,6 @@ Project được phát triển bằng React Native kết hợp Expo, có thể c
 
 <img width="1170" height="2532" alt="Cập nhật thông tin người dùng" src="https://github.com/user-attachments/assets/d0df2e1d-4e52-4590-ad36-90142ed637cf" />
 
-## 8. Link video demo
+## 8. Link video demo (nhóm em up nhầm file báo cáo cũ, file báo cáo mới em xin phép để trong link video demo ạ):
 
 - Link video demo hệ thống: https://drive.google.com/drive/folders/1aFryKCt8QaQjGD7RUAKf6I72UQw29trC?usp=sharing
