@@ -53,29 +53,35 @@ const InvoiceStack = () => (
   </Stack.Navigator>
 );
 
-const HomeStack = () => (
-  <Stack.Navigator screenOptions={screenOptions}>
-    <Stack.Screen name="DashboardScreen" component={DashboardScreen} />
-    <Stack.Screen name="RoomManagement" component={RoomManagementScreen} />
-    <Stack.Screen name="RoomDetail" component={RoomDetailScreen} />
-    <Stack.Screen name="TenantManagement" component={TenantManagementScreen} />
-    <Stack.Screen name="TenantDetail" component={TenantDetailScreen} />
-    <Stack.Screen name="InvoiceManagement" component={InvoiceManagementScreen} />
-    <Stack.Screen name="ContractManagement" component={ContractManagementScreen} />
-    <Stack.Screen name="UserRoleManagement" component={UserRoleManagementScreen} />
-    <Stack.Screen name="Reports" component={ReportsScreen} />
-    <Stack.Screen name="Notifications" component={NotificationsScreen} />
-    <Stack.Screen name="UserProfile" component={UserProfileScreen} />
-  </Stack.Navigator>
-);
+const HomeStack = () => {
+  const { userRole } = useContext(AuthContext);
+
+  return (
+    <Stack.Navigator screenOptions={screenOptions}>
+      <Stack.Screen name="DashboardScreen" component={DashboardScreen} />
+      <Stack.Screen name="RoomManagement" component={RoomManagementScreen} />
+      <Stack.Screen name="RoomDetail" component={RoomDetailScreen} />
+      <Stack.Screen name="TenantManagement" component={TenantManagementScreen} />
+      <Stack.Screen name="TenantDetail" component={TenantDetailScreen} />
+      <Stack.Screen name="InvoiceManagement" component={InvoiceManagementScreen} />
+      <Stack.Screen name="ContractManagement" component={ContractManagementScreen} />
+      <Stack.Screen name="UserRoleManagement" component={UserRoleManagementScreen} />
+      {userRole === 'admin' && <Stack.Screen name="Reports" component={ReportsScreen} />}
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="UserProfile" component={UserProfileScreen} />
+    </Stack.Navigator>
+  );
+};
 
 const MoreTabScreen = ({ navigation }) => {
   const { userRole } = useContext(AuthContext);
   const menuItems = [
     { label: 'Hợp đồng', icon: 'file-document-edit-outline', route: 'ContractManagementStack' },
-    { label: 'Báo cáo', icon: 'chart-line', route: 'ReportsStack' },
     ...(userRole === 'admin'
-      ? [{ label: 'Phân quyền', icon: 'shield-account', route: 'UserRoleManagementStack' }]
+      ? [
+          { label: 'Báo cáo', icon: 'chart-line', route: 'ReportsStack' },
+          { label: 'Phân quyền', icon: 'shield-account', route: 'UserRoleManagementStack' },
+        ]
       : []),
   ];
 
@@ -99,14 +105,18 @@ const MoreTabScreen = ({ navigation }) => {
   );
 };
 
-const MoreTabNavigator = () => (
-  <Stack.Navigator screenOptions={screenOptions}>
-    <Stack.Screen name="MoreTab" component={MoreTabScreen} />
-    <Stack.Screen name="ContractManagementStack" component={ContractManagementScreen} />
-    <Stack.Screen name="UserRoleManagementStack" component={UserRoleManagementScreen} />
-    <Stack.Screen name="ReportsStack" component={ReportsScreen} />
-  </Stack.Navigator>
-);
+const MoreTabNavigator = () => {
+  const { userRole } = useContext(AuthContext);
+
+  return (
+    <Stack.Navigator screenOptions={screenOptions}>
+      <Stack.Screen name="MoreTab" component={MoreTabScreen} />
+      <Stack.Screen name="ContractManagementStack" component={ContractManagementScreen} />
+      {userRole === 'admin' && <Stack.Screen name="UserRoleManagementStack" component={UserRoleManagementScreen} />}
+      {userRole === 'admin' && <Stack.Screen name="ReportsStack" component={ReportsScreen} />}
+    </Stack.Navigator>
+  );
+};
 
 export const MainNavigator = () => {
   const { userRole } = useContext(AuthContext);

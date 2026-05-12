@@ -1,60 +1,56 @@
 import React, { useContext } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text } from 'react-native-paper';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../context/DataContext';
 import { Header } from '../components/Common';
-import { ContractCard, InvoiceCard } from '../components/Card';
-import { formatAppDate } from '../utils/helpers';
+import { InvoiceCard, ContractCard } from '../components/Card';
 
 export const TenantDetailScreen = ({ navigation, route }) => {
   const { tenantId } = route.params || {};
-  const { getTenantById, getRoomById, getInvoicesByTenant, getContractsByTenant } = useContext(DataContext);
-  const tenant = getTenantById(tenantId);
+  const { tenants, rooms, invoices, contracts } = useContext(DataContext);
+  const tenant = tenants.find(item => item.id === tenantId);
+  const room = rooms.find(item => item.id === tenant?.roomId);
+  const tenantInvoices = invoices.filter(item => item.tenantId === tenantId);
+  const tenantContracts = contracts.filter(item => item.tenantId === tenantId);
 
   if (!tenant) {
     return (
       <View style={styles.container}>
-        <Header title="Chi tiet khach" showBack onBackPress={() => navigation.goBack()} />
+        <Header title="Chi tiet khach" />
         <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>Khong tim thay khach thue.</Text>
+          <Text style={styles.emptyText}>Không tìm thấy khách thuê.</Text>
         </View>
       </View>
     );
   }
 
-  const room = getRoomById(tenant.roomId);
-  const invoices = getInvoicesByTenant(tenant.id);
-  const contracts = getContractsByTenant(tenant.id);
-
   return (
     <View style={styles.container}>
       <Header
-        title="Thong tin khach thue"
-        subtitle={`Phong ${room?.number || 'N/A'}`}
+        title="Chi tiết khách"
         showBack
         onBackPress={() => navigation.goBack()}
       />
-
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.heroCard}>
-          <View style={styles.heroIcon}>
-            <MaterialCommunityIcons name="account" size={34} color="#2563EB" />
+        <View style={styles.summaryCard}>
+          <View style={styles.avatar}>
+            <MaterialCommunityIcons name="account" size={32} color="#FFFFFF" />
           </View>
-          <View style={styles.heroInfo}>
+          <View style={styles.summaryInfo}>
             <Text style={styles.name}>{tenant.name}</Text>
-            <Text style={styles.status}>{tenant.status === 'active' ? 'Dang thue' : 'Da roi phong'}</Text>
+            <Text style={styles.meta}>Phòng {room?.number || tenant.roomNumber || 'N/A'}</Text>
           </View>
         </View>
 
-        <InfoRow icon="phone" label="So dien thoai" value={tenant.phone || 'Chua cap nhat'} />
-        <InfoRow icon="card-account-details-outline" label="CCCD/CMND" value={tenant.idCard || 'Chua cap nhat'} />
-        <InfoRow icon="home-city" label="Phong" value={room ? `Phong ${room.number} - ${room.type}` : 'Chua gan phong'} />
-        <InfoRow icon="calendar-start" label="Ngay bat dau" value={formatAppDate(tenant.startDate) || 'N/A'} />
+        <InfoRow icon="phone" label="Điện thoại" value={tenant.phone} />
+        <InfoRow icon="card-account-details" label="CCCD / CMND" value={tenant.idCard} />
+        <InfoRow icon="calendar" label="Ngày bắt đầu" value={tenant.startDate} />
+        <InfoRow icon="check-circle" label="Trạng thái" value={tenant.status === 'active' ? 'Đang thuê' : 'Đã ngừng'} />
 
-        <Text style={styles.sectionTitle}>Hoa don lien quan</Text>
-        {invoices.length > 0 ? (
-          invoices.map((invoice) => (
+        <Text style={styles.sectionTitle}>Hóa đơn</Text>
+        {tenantInvoices.length > 0 ? (
+          tenantInvoices.map(invoice => (
             <InvoiceCard
               key={invoice.id}
               invoice={invoice}
@@ -63,12 +59,12 @@ export const TenantDetailScreen = ({ navigation, route }) => {
             />
           ))
         ) : (
-          <Text style={styles.mutedText}>Chua co hoa don.</Text>
+          <Text style={styles.mutedText}>Chưa có hóa đơn.</Text>
         )}
 
-        <Text style={styles.sectionTitle}>Hop dong lien quan</Text>
-        {contracts.length > 0 ? (
-          contracts.map((contract) => (
+        <Text style={styles.sectionTitle}>Hợp đồng</Text>
+        {tenantContracts.length > 0 ? (
+          tenantContracts.map(contract => (
             <ContractCard
               key={contract.id}
               contract={contract}
@@ -77,7 +73,7 @@ export const TenantDetailScreen = ({ navigation, route }) => {
             />
           ))
         ) : (
-          <Text style={styles.mutedText}>Chua co hop dong.</Text>
+          <Text style={styles.mutedText}>Chưa có hợp đồng.</Text>
         )}
       </ScrollView>
     </View>
@@ -87,10 +83,8 @@ export const TenantDetailScreen = ({ navigation, route }) => {
 const InfoRow = ({ icon, label, value }) => (
   <View style={styles.infoRow}>
     <MaterialCommunityIcons name={icon} size={20} color="#6B7280" />
-    <View style={styles.infoContent}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value}</Text>
-    </View>
+    <Text style={styles.infoLabel}>{label}</Text>
+    <Text style={styles.infoValue}>{value || 'N/A'}</Text>
   </View>
 );
 
@@ -103,62 +97,60 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingBottom: 32,
   },
-  heroCard: {
+  summaryCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
     marginHorizontal: 12,
     marginBottom: 12,
     padding: 14,
+    borderRadius: 8,
+    gap: 12,
   },
-  heroIcon: {
-    width: 58,
-    height: 58,
-    borderRadius: 18,
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#DBEAFE',
+    backgroundColor: '#3B82F6',
   },
-  heroInfo: {
+  summaryInfo: {
     flex: 1,
-    gap: 4,
   },
   name: {
     fontSize: 18,
     fontWeight: '700',
     color: '#1F2937',
   },
-  status: {
+  meta: {
+    marginTop: 4,
     fontSize: 13,
     color: '#6B7280',
   },
   infoRow: {
     flexDirection: 'row',
-    gap: 12,
+    alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
     marginHorizontal: 12,
     marginBottom: 8,
     padding: 12,
-  },
-  infoContent: {
-    flex: 1,
-    gap: 4,
+    borderRadius: 8,
+    gap: 10,
   },
   infoLabel: {
-    fontSize: 12,
+    flex: 1,
+    fontSize: 13,
     color: '#6B7280',
   },
   infoValue: {
-    fontSize: 14,
-    color: '#1F2937',
+    fontSize: 13,
     fontWeight: '600',
+    color: '#1F2937',
   },
   sectionTitle: {
     marginHorizontal: 12,
-    marginTop: 16,
+    marginTop: 14,
     marginBottom: 8,
     fontSize: 15,
     fontWeight: '700',
@@ -167,6 +159,7 @@ const styles = StyleSheet.create({
   mutedText: {
     marginHorizontal: 12,
     color: '#6B7280',
+    fontSize: 13,
   },
   emptyState: {
     flex: 1,

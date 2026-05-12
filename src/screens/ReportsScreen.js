@@ -4,6 +4,7 @@ import { Text } from 'react-native-paper';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../context/DataContext';
 import { Header, StatCard } from '../components/Common';
+import { parseAppDate } from '../utils/helpers';
 
 export const ReportsScreen = ({ navigation }) => {
   const { getDashboardStats, invoices, rooms, tenants, contracts } = useContext(DataContext);
@@ -12,7 +13,14 @@ export const ReportsScreen = ({ navigation }) => {
   const paidInvoices = invoices.filter(i => i.status === 'paid').length;
   const unpaidInvoices = invoices.filter(i => i.status !== 'paid').length;
   const occupancyRate = stats.totalRooms > 0 ? Math.round((stats.occupiedRooms / stats.totalRooms) * 100) : 0;
-  const activeContracts = contracts.filter(c => c.status === 'active').length;
+  const today = parseAppDate(new Date());
+  const activeContracts = contracts.filter(contract => {
+    const endDate = parseAppDate(contract.endDate);
+    if (endDate && today) {
+      return endDate >= today;
+    }
+    return contract.status === 'active' || contract.status === 'expiring';
+  }).length;
 
   return (
     <View style={styles.container}>

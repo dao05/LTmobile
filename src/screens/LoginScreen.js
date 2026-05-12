@@ -1,167 +1,305 @@
-import React, { useContext, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
 import { Text } from 'react-native-paper';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
+import { TextInputField, CheckboxField } from '../components/FormComponents';
 import { ActionButton } from '../components/Common';
-import { TextInputField } from '../components/FormComponents';
 
 export const LoginScreen = ({ navigation }) => {
-  const { signIn, error } = useContext(AuthContext);
   const [email, setEmail] = useState('admin@rental.com');
   const [password, setPassword] = useState('admin123');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const { signIn } = React.useContext(AuthContext);
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Thieu thong tin', 'Nhap email va mat khau.');
+      setError('Vui lòng nhập email và mật khẩu');
       return;
     }
 
-    setIsSubmitting(true);
-    const ok = await signIn(email.trim(), password);
-    setIsSubmitting(false);
+    setLoading(true);
+    setError('');
 
-    if (!ok) {
-      Alert.alert('Dang nhap that bai', error || 'Email hoac mat khau khong dung.');
+    const success = await signIn(email, password);
+    if (!success) {
+      setError('Email hoặc mật khẩu không đúng');
     }
+
+    setLoading(false);
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.hero}>
-        <View style={styles.logoWrap}>
-          <MaterialCommunityIcons name="home-city-outline" size={34} color="#FFFFFF" />
+    <SafeAreaView edges={['top', 'bottom']} style={styles.container}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <MaterialCommunityIcons name="home-city" size={40} color="#FFFFFF" />
+          <Text style={styles.headerTitle}>Sanctuary</Text>
+          <Text style={styles.headerSubtitle}>Giải pháp quản lý bất động sản thông minh</Text>
         </View>
-        <Text style={styles.title}>Sanctuary</Text>
-        <Text style={styles.subtitle}>Quan ly phong tro tren mobile</Text>
       </View>
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.formWrap}>
-        <View style={styles.formCard}>
-          <Text style={styles.formTitle}>Dang nhap</Text>
-          <Text style={styles.formDescription}>Su dung tai khoan quan tri, quan ly hoac tai khoan da dang ky.</Text>
+      <View style={styles.form}>
+        <Text style={styles.welcomeTitle}>Chào mừng trở lại</Text>
+        <Text style={styles.welcomeSubtitle}>Vui lòng đăng nhập để tiếp tục quản lý</Text>
 
-          <TextInputField
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="admin@rental.com"
-            icon="email-outline"
-            keyboardType="email-address"
-          />
-          <TextInputField
-            label="Mat khau"
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Nhap mat khau"
-            icon="lock-outline"
-            secureTextEntry
-          />
-
-          <ActionButton
-            label={isSubmitting ? 'Dang xu ly...' : 'Dang nhap'}
-            icon="login"
-            onPress={handleLogin}
-            disabled={isSubmitting}
-            fullWidth
-          />
-
-          <View style={styles.helperBox}>
-            <Text style={styles.helperTitle}>Tai khoan mau</Text>
-            <Text style={styles.helperText}>Admin: `admin@rental.com` / `admin123`</Text>
-            <Text style={styles.helperText}>Manager: `manager@rental.com` / `manager123`</Text>
+        {error ? (
+          <View style={styles.errorBox}>
+            <MaterialCommunityIcons name="alert-circle" size={20} color="#DC2626" />
+            <Text style={styles.errorText}>{error}</Text>
           </View>
+        ) : null}
 
-          <Pressable onPress={() => navigation.navigate('SignUp')} style={styles.linkButton}>
-            <Text style={styles.linkText}>Chua co tai khoan? Dang ky</Text>
+        <TextInputField
+          label="Email hoặc Số điện thoại"
+          value={email}
+          onChangeText={setEmail}
+          placeholder="tenant@example.com"
+          icon="email"
+          keyboardType="email-address"
+        />
+
+        <View style={styles.fieldContainer}>
+          <View style={styles.fieldHeader}>
+            <Text style={styles.fieldLabel}>Mật khẩu</Text>
+            <Pressable onPress={() => setError('Vui lòng liên hệ admin để đặt lại mật khẩu')}>
+              <Text style={styles.forgotLink}>Quên mật khẩu?</Text>
+            </Pressable>
+          </View>
+          <View style={styles.inputWrapper}>
+            <MaterialCommunityIcons name="lock" size={20} color="#9CA3AF" style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="••••••••"
+              secureTextEntry={!showPassword}
+              placeholderTextColor="#D1D5DB"
+              selectionColor="#3B82F6"
+              underlineColorAndroid="transparent"
+            />
+            <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+              <MaterialCommunityIcons name={showPassword ? 'eye' : 'eye-off'} size={20} color="#9CA3AF" />
+            </Pressable>
+          </View>
+        </View>
+
+        <CheckboxField
+          label="Duy trì đăng nhập"
+          value={rememberMe}
+          onValueChange={setRememberMe}
+        />
+
+        <ActionButton
+          label={loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+          onPress={handleLogin}
+          disabled={loading}
+          fullWidth
+          size="large"
+        />
+
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>Hoặc</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <View style={styles.socialButtons}>
+          <Pressable style={styles.socialButton}>
+            <MaterialCommunityIcons name="google" size={24} color="#EA4335" />
+            <Text style={styles.socialButtonText}>Google</Text>
+          </Pressable>
+          <Pressable style={styles.socialButton}>
+            <MaterialCommunityIcons name="facebook" size={24} color="#1877F2" />
+            <Text style={styles.socialButtonText}>Facebook</Text>
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
-    </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Chưa có tài khoản? </Text>
+          <Pressable onPress={() => navigation.navigate('SignUp')}>
+            <Text style={styles.footerLink}>Đăng ký</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      <Text style={styles.devInfo}>PHÁT TRIỂN BỞI DUAN CONG DAO</Text>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F3F4F6',
   },
-  hero: {
-    paddingTop: 96,
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-    backgroundColor: '#1D4ED8',
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
-    gap: 10,
+  scrollView: {
+    flex: 1,
   },
-  logoWrap: {
-    width: 62,
-    height: 62,
-    borderRadius: 18,
+  header: {
+    backgroundColor: '#0066CC',
+    paddingTop: 20,
+    paddingBottom: 40,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.18)',
   },
-  title: {
+  headerContent: {
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerTitle: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
-  subtitle: {
+  headerSubtitle: {
     fontSize: 14,
-    color: '#DBEAFE',
+    color: '#E0E7FF',
   },
-  formWrap: {
-    flex: 1,
-    paddingHorizontal: 16,
-    marginTop: -24,
-  },
-  formCard: {
+  form: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 18,
-    gap: 14,
+    marginHorizontal: 16,
+    marginTop: -20,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  formTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  formDescription: {
-    fontSize: 13,
-    lineHeight: 20,
-    color: '#6B7280',
-  },
-  helperBox: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
-    padding: 14,
-    gap: 6,
-  },
-  helperTitle: {
-    fontSize: 13,
+  welcomeTitle: {
+    fontSize: 20,
     fontWeight: '700',
     color: '#1F2937',
+    marginBottom: 4,
   },
-  helperText: {
-    fontSize: 12,
-    color: '#475569',
+  welcomeSubtitle: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginBottom: 20,
   },
-  linkButton: {
+  errorBox: {
+    flexDirection: 'row',
+    backgroundColor: '#FEE2E2',
+    borderRadius: 6,
+    padding: 12,
+    marginBottom: 16,
+    gap: 12,
     alignItems: 'center',
-    paddingTop: 6,
   },
-  linkText: {
+  errorText: {
+    fontSize: 13,
+    color: '#DC2626',
+    flex: 1,
+    fontWeight: '500',
+  },
+  fieldContainer: {
+    marginBottom: 16,
+  },
+  fieldHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  fieldLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#2563EB',
+    color: '#1F2937',
+  },
+  forgotLink: {
+    fontSize: 12,
+    color: '#3B82F6',
+    fontWeight: '600',
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#F9FAFB',
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    fontSize: 14,
+    color: '#1F2937',
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    backgroundColor: 'transparent',
+  },
+  eyeIcon: {
+    padding: 8,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E5E7EB',
+  },
+  dividerText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginHorizontal: 12,
+  },
+  socialButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  socialButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+    gap: 8,
+  },
+  socialButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  footerText: {
+    fontSize: 13,
+    color: '#6B7280',
+  },
+  footerLink: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#3B82F6',
+  },
+  devInfo: {
+    fontSize: 10,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    marginBottom: 16,
+    marginTop: 8,
+    letterSpacing: 1,
   },
 });
-

@@ -1,241 +1,246 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, StyleSheet, TextInput, View } from 'react-native';
+import React, { useContext, useState, useEffect } from 'react';
+import { View, StyleSheet, FlatList, TextInput } from 'react-native';
 import { Text } from 'react-native-paper';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { DataContext } from '../context/DataContext';
 import { Header, FilterBar, FloatingActionButton } from '../components/Common';
 import { TenantCard } from '../components/Card';
-import { ConfirmModal, DatePickerField, FormModal, SelectField, TextInputField } from '../components/FormComponents';
-import { formatAppDate } from '../utils/helpers';
+import { FormModal, TextInputField, SelectField, ConfirmModal, DatePickerField } from '../components/FormComponents';
 
 const tenantFilters = [
-  { key: 'all', label: 'Tat ca' },
-  { key: 'active', label: 'Dang thue' },
-  { key: 'inactive', label: 'Da roi phong' },
+  { key: 'all', label: 'Tất cả' },
+  { key: 'active', label: 'Hoạt động' },
+  { key: 'inactive', label: 'Đã thôi' },
 ];
 
 export const TenantManagementScreen = ({ navigation }) => {
-  const { tenants, rooms, addTenant, updateTenant, deleteTenant, getRoomAvailableSlots, getRoomById } = useContext(DataContext);
-  const [selectedFilter, setSelectedFilter] = useState('all');
-  const [searchText, setSearchText] = useState('');
+  const { tenants, rooms, addTenant, updateTenant, deleteTenant, getAvailableRooms, getRoomAvailableSlots } = useContext(DataContext);
   const [filteredTenants, setFilteredTenants] = useState([]);
+  const [selectedFilter, setSelectedFilter] = useState('all');
   const [modalVisible, setModalVisible] = useState(false);
-  const [confirmVisible, setConfirmVisible] = useState(false);
   const [editingTenant, setEditingTenant] = useState(null);
+  const [confirmVisible, setConfirmVisible] = useState(false);
   const [deletingTenantId, setDeletingTenantId] = useState(null);
+  const [searchText, setSearchText] = useState('');
+
+  // Form states
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [idCard, setIdCard] = useState('');
   const [roomId, setRoomId] = useState(null);
-  const [startDate, setStartDate] = useState(formatAppDate(new Date()));
-  const [status, setStatus] = useState('active');
+  const [startDate, setStartDate] = useState('');
 
   useEffect(() => {
-    let nextTenants = tenants;
-
-    if (selectedFilter !== 'all') {
-      nextTenants = nextTenants.filter((tenant) => tenant.status === selectedFilter);
-    }
-
-    if (searchText.trim()) {
-      const keyword = searchText.trim().toLowerCase();
-      nextTenants = nextTenants.filter((tenant) => {
-        const room = getRoomById(tenant.roomId);
-        return (
-          tenant.name?.toLowerCase().includes(keyword) ||
-          tenant.phone?.includes(keyword) ||
-          tenant.idCard?.includes(keyword) ||
-          String(room?.number || '').includes(keyword)
-        );
-      });
-    }
-
-    setFilteredTenants(nextTenants);
+    filterTenants();
   }, [tenants, rooms, selectedFilter, searchText]);
 
-  const roomItems = useMemo(() => {
-    const availableRooms = rooms.filter((room) => (
-      getRoomAvailableSlots(room, editingTenant?.id) > 0 ||
-      room.id === editingTenant?.roomId
-    ));
+  const filterTenants = () => {
+    let filtered = tenants;
 
-    return availableRooms.map((room) => ({
-      label: `Phong ${room.number} - con ${getRoomAvailableSlots(room, editingTenant?.id)} cho`,
-      value: room.id,
-    }));
-  }, [rooms, tenants, editingTenant, getRoomAvailableSlots]);
+    if (selectedFilter !== 'all') {
+      filtered = filtered.filter(tenant => tenant.status === selectedFilter);
+    }
 
-  const statusItems = [
-    { label: 'Dang thue', value: 'active' },
-    { label: 'Da roi phong', value: 'inactive' },
-  ];
+    if (searchText) {
+      filtered = filtered.filter(tenant =>
+        tenant.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        tenant.phone.includes(searchText)
+      );
+    }
 
-  const resetForm = () => {
+    setFilteredTenants(filtered);
+  };
+
+  const handleAddTenant = () => {
     setEditingTenant(null);
     setName('');
     setPhone('');
     setIdCard('');
-    setRoomId(roomItems[0]?.value ?? null);
-    setStartDate(formatAppDate(new Date()));
-    setStatus('active');
-  };
-
-  const handleAddTenant = () => {
-    resetForm();
+    setRoomId(null);
+    setStartDate('');
     setModalVisible(true);
   };
 
   const handleEditTenant = (tenant) => {
     setEditingTenant(tenant);
-    setName(tenant.name || '');
-    setPhone(tenant.phone || '');
-    setIdCard(tenant.idCard || '');
-    setRoomId(tenant.roomId || null);
-    setStartDate(formatAppDate(tenant.startDate) || formatAppDate(new Date()));
-    setStatus(tenant.status || 'active');
+    setName(tenant.name);
+    setPhone(tenant.phone);
+    setIdCard(tenant.idCard);
+    setRoomId(tenant.roomId);
+    setStartDate(tenant.startDate);
     setModalVisible(true);
   };
 
   const handleSaveTenant = async () => {
     if (!name || !phone || !idCard || !roomId || !startDate) {
-      Alert.alert('Thieu thong tin', 'Vui long dien day du thong tin.');
+      alert('Vui lòng điền đầy đủ thông tin');
       return;
     }
 
     try {
-      const payload = { name, phone, idCard, roomId, startDate, status };
       if (editingTenant) {
-        await updateTenant(editingTenant.id, payload);
+        await updateTenant(editingTenant.id, {
+          name,
+          phone,
+          idCard,
+          roomId,
+          startDate,
+        });
       } else {
-        await addTenant(payload);
+        await addTenant({
+          name,
+          phone,
+          idCard,
+          roomId,
+          startDate,
+        });
       }
-      setModalVisible(false);
-      resetForm();
     } catch (error) {
-      Alert.alert('Khong the luu', error.message || 'Da co loi xay ra.');
+      alert(error.message || 'Không thể lưu khách thuê');
+      return;
     }
+
+    setModalVisible(false);
   };
 
-  const handleDeleteTenant = async () => {
-    await deleteTenant(deletingTenantId);
+  const handleDeleteTenant = async (tenantId) => {
+    await deleteTenant(tenantId);
     setConfirmVisible(false);
     setDeletingTenantId(null);
   };
 
+  const renderTenant = ({ item }) => {
+    const room = rooms.find(r => r.id === item.roomId);
+    return (
+      <TenantCard
+        tenant={item}
+        room={room}
+        onEdit={() => handleEditTenant(item)}
+        onDelete={() => {
+          setDeletingTenantId(item.id);
+          setConfirmVisible(true);
+        }}
+        onView={() => navigation.navigate('TenantDetail', { tenantId: item.id })}
+      />
+    );
+  };
+
+  const selectableRooms = getAvailableRooms(editingTenant?.id);
+  const availableRooms = selectableRooms.map(room => ({
+    label: `Phòng ${room.number} - ${room.type} (còn ${getRoomAvailableSlots(room, editingTenant?.id)} chỗ)`,
+    value: room.id,
+  }));
+
   return (
     <View style={styles.container}>
-      <Header title="Quan ly khach thue" showNotification={false} />
+      <Header
+        title="Danh sách khách thuê"
+        showNotification={false}
+      />
 
+      {/* Search Bar */}
       <View style={styles.searchBar}>
         <MaterialCommunityIcons name="magnify" size={20} color="#9CA3AF" />
         <TextInput
           style={styles.searchInput}
+          placeholder="Tìm kiếm khách thuê..."
           value={searchText}
           onChangeText={setSearchText}
-          placeholder="Tim theo ten, phong, so dien thoai..."
           placeholderTextColor="#9CA3AF"
         />
       </View>
 
+      {/* Filter Chips */}
       <FilterBar
         filters={tenantFilters}
         selectedValue={selectedFilter}
         onChange={setSelectedFilter}
       />
 
+      {/* Tenant List */}
       <FlatList
         data={filteredTenants}
+        renderItem={renderTenant}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <TenantCard
-            tenant={item}
-            room={getRoomById(item.roomId)}
-            onView={() => navigation.navigate('TenantDetail', { tenantId: item.id })}
-            onEdit={() => handleEditTenant(item)}
-            onDelete={() => {
-              setDeletingTenantId(item.id);
-              setConfirmVisible(true);
-            }}
-          />
-        )}
-        ListEmptyComponent={(
+        ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons name="account-search-outline" size={48} color="#D1D5DB" />
-            <Text style={styles.emptyText}>Khong tim thay khach thue phu hop</Text>
+            <MaterialCommunityIcons name="account-off" size={48} color="#D1D5DB" />
+            <Text style={styles.emptyText}>Không tìm thấy khách thuê nào</Text>
           </View>
-        )}
+        }
         contentContainerStyle={styles.listContent}
       />
 
+      {/* Add Tenant Modal */}
       <FormModal
         visible={modalVisible}
-        title={editingTenant ? 'Chinh sua khach thue' : 'Them khach thue'}
+        title={editingTenant ? 'Chỉnh sửa khách thuê' : 'Thêm khách thuê mới'}
         onClose={() => setModalVisible(false)}
         onSubmit={handleSaveTenant}
       >
         <TextInputField
-          label="Ho ten"
+          label="Họ và tên"
           value={name}
           onChangeText={setName}
-          placeholder="Nguyen Van A"
+          placeholder="Nguyễn Văn A"
           icon="account"
         />
+
         <TextInputField
-          label="So dien thoai"
+          label="Số điện thoại"
           value={phone}
           onChangeText={setPhone}
           placeholder="0901234567"
           icon="phone"
           keyboardType="phone-pad"
         />
+
         <TextInputField
-          label="CCCD/CMND"
+          label="CCCD / CMND"
           value={idCard}
           onChangeText={setIdCard}
-          placeholder="012345678901"
-          icon="card-account-details-outline"
-          keyboardType="numeric"
+          placeholder="001203004567"
+          icon="card-account-details"
         />
+
         <SelectField
-          label="Phong thue"
+          label="Chọn phòng"
           value={roomId}
           onValueChange={setRoomId}
-          items={roomItems}
-          placeholder="Chon phong"
-          icon="home-city"
+          items={availableRooms}
+          placeholder="Chọn phòng còn chỗ"
+          icon="home"
         />
+
         <DatePickerField
-          label="Ngay bat dau thue"
+          label="Ngày bắt đầu thuê"
           value={startDate}
           onChangeText={setStartDate}
-          placeholder="Chon ngay bat dau"
-          icon="calendar-start"
-        />
-        <SelectField
-          label="Trang thai"
-          value={status}
-          onValueChange={setStatus}
-          items={statusItems}
-          placeholder="Chon trang thai"
-          icon="toggle-switch"
+          placeholder="Chọn ngày bắt đầu thuê"
+          icon="calendar"
         />
       </FormModal>
 
+      {/* Confirm Delete Modal */}
       <ConfirmModal
         visible={confirmVisible}
-        title="Xoa khach thue"
-        message="Ban chac chan muon xoa khach thue nay?"
+        title="Xóa khách thuê"
+        message="Bạn có chắc chắn muốn xóa khách thuê này? Hành động này không thể hoàn tác."
         type="danger"
-        confirmText="Xoa"
-        cancelText="Huy"
-        onConfirm={handleDeleteTenant}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        onConfirm={() => handleDeleteTenant(deletingTenantId)}
         onCancel={() => {
           setConfirmVisible(false);
           setDeletingTenantId(null);
         }}
       />
 
-      <FloatingActionButton onPress={handleAddTenant} />
+      <FloatingActionButton
+        onPress={handleAddTenant}
+        icon="plus"
+        color="#3B82F6"
+      />
     </View>
   );
 };
@@ -262,21 +267,22 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 0,
     paddingHorizontal: 10,
-    color: '#1F2937',
     fontSize: 14,
+    color: '#1F2937',
   },
   listContent: {
-    paddingBottom: 96,
-    paddingTop: 6,
+    paddingTop: 8,
+    paddingBottom: 110,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 72,
-    gap: 10,
+    paddingVertical: 40,
   },
   emptyText: {
+    marginTop: 12,
     fontSize: 14,
-    color: '#6B7280',
+    color: '#9CA3AF',
+    fontWeight: '500',
   },
 });

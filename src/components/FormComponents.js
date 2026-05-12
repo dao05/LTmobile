@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Modal, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, TextInput } from 'react-native-paper';
+import { View, StyleSheet, Modal, ScrollView, Pressable, KeyboardAvoidingView, Platform, TextInput } from 'react-native';
+import { Text } from 'react-native-paper';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ActionButton } from './Common';
 import { formatAppDate, formatInvoiceMonth, parseAppDate, parseInvoiceMonth } from '../utils/helpers';
@@ -133,6 +133,8 @@ export const TextInputField = ({ label, value, onChangeText, placeholder, secure
           keyboardType={keyboardType}
           editable={editable}
           placeholderTextColor="#D1D5DB"
+          selectionColor="#3B82F6"
+          underlineColorAndroid="transparent"
         />
       </View>
     </View>
@@ -151,6 +153,8 @@ export const DateInputField = ({ label, value, onChangeText, placeholder }) => {
           onChangeText={onChangeText}
           placeholder={placeholder}
           placeholderTextColor="#D1D5DB"
+          selectionColor="#3B82F6"
+          underlineColorAndroid="transparent"
         />
       </View>
     </View>
@@ -395,6 +399,8 @@ export const TextAreaField = ({ label, value, onChangeText, placeholder, numberO
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor="#D1D5DB"
+        selectionColor="#3B82F6"
+        underlineColorAndroid="transparent"
         multiline
         numberOfLines={numberOfLines}
       />
@@ -530,6 +536,9 @@ const styles = StyleSheet.create({
     minWidth: 0,
     fontSize: 14,
     color: '#1F2937',
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    backgroundColor: 'transparent',
   },
   inputWithIcon: {
     marginLeft: 8,

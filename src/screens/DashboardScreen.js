@@ -5,17 +5,21 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { AuthContext } from '../context/AuthContext';
 import { DataContext } from '../context/DataContext';
 import { Header, StatCard, NotificationAlert, FloatingActionButton } from '../components/Common';
+import { parseAppDate } from '../utils/helpers';
+
+const DAY_IN_MS = 1000 * 60 * 60 * 24;
 
 export const DashboardScreen = ({ navigation }) => {
   const { userData, userRole } = useContext(AuthContext);
-  const { getDashboardStats, getExpiringContracts, getOverdueInvoices, rooms, tenants, invoices } = useContext(DataContext);
+  const { getDashboardStats, getExpiringContracts, getOverdueInvoices, rooms, tenants, invoices, contracts } = useContext(DataContext);
   const [stats, setStats] = useState({});
   const [expiringContracts, setExpiringContracts] = useState([]);
   const [overdueInvoices, setOverdueInvoices] = useState([]);
+  const canAccessReports = userRole === 'admin';
 
   useEffect(() => {
     loadDashboardData();
-  }, [rooms, tenants, invoices]);
+  }, [rooms, tenants, invoices, contracts]);
 
   const loadDashboardData = () => {
     setStats(getDashboardStats());
@@ -37,13 +41,20 @@ export const DashboardScreen = ({ navigation }) => {
         { name: 'Khách', icon: 'account-multiple', route: 'TenantManagement', color: '#10B981' },
         { name: 'Hóa đơn', icon: 'file-document', route: 'InvoiceManagement', color: '#F59E0B' },
         { name: 'Hợp đồng', icon: 'file-document-edit-outline', route: 'ContractManagement', color: '#8B5CF6' },
-        { name: 'Báo cáo', icon: 'chart-line', route: 'Reports', color: '#EC4899' },
       ];
   const getRoomNumber = (roomId) => rooms.find(item => item.id === roomId)?.number || 'N/A';
   const overdueRoomNumbers = [
     ...new Set(overdueInvoices.map(invoice => getRoomNumber(invoice.roomId))),
   ].join(', ');
-  const firstExpiringRoomNumber = getRoomNumber(expiringContracts[0]?.roomId);
+  const firstExpiringContract = expiringContracts[0];
+  const firstExpiringEndDate = parseAppDate(firstExpiringContract?.endDate);
+  const firstExpiringDaysLeft = firstExpiringEndDate
+    ? Math.max(Math.ceil((firstExpiringEndDate - parseAppDate(new Date())) / DAY_IN_MS), 0)
+    : null;
+  const firstExpiringRoomNumber = getRoomNumber(firstExpiringContract?.roomId);
+  const firstExpiringMessage = firstExpiringDaysLeft !== null
+    ? `Còn ${firstExpiringDaysLeft} ngày nữa. Hãy liên hệ khách thuê để gia hạn.`
+    : 'Hãy liên hệ khách thuê để kiểm tra và gia hạn hợp đồng.';
 
   return (
     <View style={styles.container}>
@@ -75,7 +86,7 @@ export const DashboardScreen = ({ navigation }) => {
             value={stats.totalRevenue?.toLocaleString('vi-VN') + 'đ' || '0đ'}
             icon={<MaterialCommunityIcons name="cash-multiple" size={28} color="#3B82F6" />}
             color="#3B82F6"
-            onPress={() => navigation.navigate('Reports')}
+            onPress={canAccessReports ? () => navigation.navigate('Reports') : undefined}
           />
           <View style={styles.statsRow}>
             <View style={{ flex: 1 }}>
@@ -142,7 +153,7 @@ export const DashboardScreen = ({ navigation }) => {
               <NotificationAlert
                 type="warning"
                 title={`Hợp đồng phòng ${firstExpiringRoomNumber} sắp hết hạn`}
-                message={`Còn ${Math.ceil((new Date(expiringContracts[0]?.endDate) - new Date()) / (1000 * 60 * 60 * 24))} ngày nữa. Hãy liên hệ khách thuê để gia hạn.`}
+                message={firstExpiringMessage}
                 actionText="GIA HẠN NGAY"
                 onActionPress={() => navigation.navigate('ContractManagement')}
               />
@@ -160,21 +171,23 @@ export const DashboardScreen = ({ navigation }) => {
         )}
 
         {/* Quick Report Section */}
-        <View style={styles.reportSection}>
-          <Text style={styles.sectionTitle}>Báo cáo</Text>
-          <Pressable style={styles.reportCard} onPress={() => navigation.navigate('Reports')}>
-            <View style={styles.reportHeader}>
-              <MaterialCommunityIcons name="chart-box" size={40} color="#3B82F6" />
-              <View style={styles.reportInfo}>
-                <Text style={styles.reportTitle}>Tổng quan nhanh</Text>
-           
+        {canAccessReports && (
+          <View style={styles.reportSection}>
+            <Text style={styles.sectionTitle}>Báo cáo</Text>
+            <Pressable style={styles.reportCard} onPress={() => navigation.navigate('Reports')}>
+              <View style={styles.reportHeader}>
+                <MaterialCommunityIcons name="chart-box" size={40} color="#3B82F6" />
+                <View style={styles.reportInfo}>
+                  <Text style={styles.reportTitle}>Tổng quan nhanh</Text>
+             
+                </View>
               </View>
-            </View>
-            <Pressable style={styles.reportButton} onPress={() => navigation.navigate('Reports')}>
-              <Text style={styles.reportButtonText}>Xem báo cáo</Text>
+              <Pressable style={styles.reportButton} onPress={() => navigation.navigate('Reports')}>
+                <Text style={styles.reportButtonText}>Xem báo cáo</Text>
+              </Pressable>
             </Pressable>
-          </Pressable>
-        </View>
+          </View>
+        )}
       </ScrollView>
 
       <FloatingActionButton

@@ -1,10 +1,11 @@
-import React, { createContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fileStorage } from '../services/fileStorage';
 
 export const AuthContext = createContext();
 
 const USERS_STORAGE_KEY = 'sanctuary_users';
+const SESSION_STORAGE_KEYS = ['userToken', 'userRole', 'userData'];
 
 const normalizeSystemUser = (userData) => {
   if (!userData) return null;
@@ -91,27 +92,10 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const bootstrapAsync = async () => {
       try {
-        const token = await AsyncStorage.getItem('userToken');
-        const role = await AsyncStorage.getItem('userRole');
-        const userData = await AsyncStorage.getItem('userData');
-
-        if (token) {
-          const parsedUserData = normalizeSystemUser(userData ? JSON.parse(userData) : null);
-          if (parsedUserData) {
-            await AsyncStorage.setItem('userData', JSON.stringify(parsedUserData));
-          }
-
-          dispatch({
-            type: 'RESTORE_TOKEN',
-            token,
-            role,
-            userData: parsedUserData,
-          });
-        } else {
-          dispatch({ type: 'RESTORE_TOKEN', token: null, role: null, userData: null });
-        }
+        await AsyncStorage.multiRemove(SESSION_STORAGE_KEYS);
+        dispatch({ type: 'RESTORE_TOKEN', token: null, role: null, userData: null });
       } catch (e) {
-        console.log('Failed to restore token:', e);
+        console.log('Failed to clear session:', e);
         dispatch({ type: 'RESTORE_TOKEN', token: null, role: null, userData: null });
       }
     };
@@ -160,12 +144,12 @@ export const AuthProvider = ({ children }) => {
             return false;
           }
 
-          const userData = {
+          const userData = normalizeSystemUser({
             id: user.id,
             name: user.name,
             email,
             role: managedUser?.role || user.role,
-          };
+          });
 
           await AsyncStorage.setItem('userToken', 'fake-token-' + Date.now());
           await AsyncStorage.setItem('userRole', userData.role);

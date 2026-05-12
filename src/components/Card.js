@@ -1,329 +1,446 @@
 import React from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
-import { Avatar, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { ActionButton } from './Common';
-import { formatAppDate, formatCurrency } from '../utils/helpers';
 
-const getRoomStatusMeta = (status) => {
-  switch (status) {
-    case 'occupied':
-      return { label: 'Dang thue', color: '#F59E0B', icon: 'account-group' };
-    case 'under_maintenance':
-      return { label: 'Bao tri', color: '#EF4444', icon: 'tools' };
-    default:
-      return { label: 'Trong', color: '#10B981', icon: 'door-open' };
-  }
-};
-
-const getInvoiceStatusMeta = (status) => (
-  status === 'paid'
-    ? { label: 'Da thanh toan', color: '#10B981', icon: 'check-circle' }
-    : { label: 'Chua thanh toan', color: '#EF4444', icon: 'clock-alert-outline' }
-);
-
-const getContractStatusMeta = (status) => {
-  switch (status) {
-    case 'expired':
-      return { label: 'Het han', color: '#EF4444', icon: 'calendar-remove' };
-    case 'expiring':
-      return { label: 'Sap het han', color: '#F59E0B', icon: 'calendar-alert' };
-    default:
-      return { label: 'Con han', color: '#10B981', icon: 'calendar-check' };
-  }
-};
-
-const getTenantStatusMeta = (status) => (
-  status === 'active'
-    ? { label: 'Dang thue', color: '#10B981', icon: 'account-check' }
-    : { label: 'Da roi phong', color: '#6B7280', icon: 'account-off' }
-);
-
-const Badge = ({ icon, label, color }) => (
-  <View style={[styles.badge, { backgroundColor: `${color}18` }]}>
-    <MaterialCommunityIcons name={icon} size={14} color={color} />
-    <Text style={[styles.badgeText, { color }]}>{label}</Text>
-  </View>
-);
-
-const ActionRow = ({ actions = [] }) => {
-  if (actions.filter(Boolean).length === 0) return null;
-
+export const Card = ({ title, subtitle, onPress, rightActions, children, style }) => {
   return (
-    <View style={styles.actionRow}>
-      {actions.filter(Boolean).map((action) => (
-        <ActionButton
-          key={action.label}
-          label={action.label}
-          icon={action.icon}
-          onPress={action.onPress}
-          variant={action.variant || 'outline'}
-          size="small"
-        />
-      ))}
+    <View style={[styles.card, style]}>
+      <Pressable style={styles.container} onPress={onPress}>
+        <View style={styles.content}>
+          {title && <Text style={styles.title}>{title}</Text>}
+          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+          {children}
+        </View>
+        {rightActions && (
+          <View style={styles.actions}>
+            {rightActions}
+          </View>
+        )}
+      </Pressable>
     </View>
   );
 };
 
-export const Card = ({ children, style }) => (
-  <View style={[styles.card, style]}>
-    {children}
-  </View>
-);
+export const RoomCard = ({ room, onPress, onEdit, onDelete, onView }) => {
+  const capacity = Math.max(parseInt(room.capacity, 10) || 1, 1);
+  const occupiedSlots = Math.max(parseInt(room.occupiedSlots, 10) || 0, 0);
+  const availableSlots = room.availableSlots !== undefined
+    ? Math.max(parseInt(room.availableSlots, 10) || 0, 0)
+    : Math.max(capacity - occupiedSlots, 0);
 
-export const RoomCard = ({ room, onView, onEdit, onDelete }) => {
-  const statusMeta = getRoomStatusMeta(room.status);
+  const getStatusColor = () => {
+    if (room.status === 'under_maintenance') return '#EF4444';
+    if (occupiedSlots > 0 && availableSlots > 0) return '#F59E0B';
+    if (occupiedSlots > 0) return '#10B981';
+    return '#3B82F6';
+  };
+
+  const getStatusLabel = () => {
+    if (room.status === 'under_maintenance') return 'BẢO TRÌ';
+    if (occupiedSlots > 0 && availableSlots > 0) return `CÒN ${availableSlots} CHỖ`;
+    if (occupiedSlots > 0) return 'ĐÃ ĐẦY';
+    return 'TRỐNG';
+  };
 
   return (
-    <Card>
-      <View style={styles.headerRow}>
-        <View style={styles.leadingRow}>
-          <View style={styles.iconWrap}>
-            <MaterialCommunityIcons name="home-city" size={24} color="#3B82F6" />
+    <Card
+      title={`Phòng ${room.number}`}
+      onPress={onPress}
+      rightActions={
+        <View style={styles.actionButtons}>
+          {onView && (
+            <Pressable onPress={onView} style={styles.iconButton}>
+              <MaterialCommunityIcons name="eye" size={24} color="#3B82F6" />
+            </Pressable>
+          )}
+          {onEdit && (
+            <Pressable onPress={onEdit} style={styles.iconButton}>
+              <MaterialCommunityIcons name="pencil" size={24} color="#10B981" />
+            </Pressable>
+          )}
+          {onDelete && (
+            <Pressable onPress={onDelete} style={styles.iconButton}>
+              <MaterialCommunityIcons name="delete" size={24} color="#EF4444" />
+            </Pressable>
+          )}
+        </View>
+      }
+      style={{ marginBottom: 8 }}
+    >
+      <View style={styles.roomDetails}>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Loại phòng:</Text>
+          <Text style={styles.detailValue}>{room.type}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Giá thuê:</Text>
+          <Text style={styles.detailValue}>{room.price?.toLocaleString('vi-VN')}đ</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Diện tích:</Text>
+          <Text style={styles.detailValue}>{room.area}m²</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Sức chứa:</Text>
+          <Text style={styles.detailValue}>{occupiedSlots}/{capacity} người</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Còn trống:</Text>
+          <Text style={styles.detailValue}>{availableSlots} chỗ</Text>
+        </View>
+        <View style={[styles.statusBadge, { backgroundColor: getStatusColor() + '20', borderColor: getStatusColor(), borderWidth: 1 }]}>
+          <Text style={[styles.statusLabel, { color: getStatusColor() }]}>{getStatusLabel()}</Text>
+        </View>
+      </View>
+    </Card>
+  );
+};
+
+export const TenantCard = ({ tenant, room, onPress, onEdit, onDelete, onView }) => {
+  const roomNumber = room?.number || tenant.roomNumber || 'N/A';
+
+  return (
+    <Card
+      title={tenant.name}
+      subtitle={`Phòng ${roomNumber}`}
+      onPress={onPress}
+      rightActions={
+        <View style={styles.actionButtons}>
+          {onView && (
+            <Pressable onPress={onView} style={styles.iconButton}>
+              <MaterialCommunityIcons name="information" size={24} color="#3B82F6" />
+            </Pressable>
+          )}
+          {onEdit && (
+            <Pressable onPress={onEdit} style={styles.iconButton}>
+              <MaterialCommunityIcons name="pencil" size={24} color="#10B981" />
+            </Pressable>
+          )}
+          {onDelete && (
+            <Pressable onPress={onDelete} style={styles.iconButton}>
+              <MaterialCommunityIcons name="delete" size={24} color="#EF4444" />
+            </Pressable>
+          )}
+        </View>
+      }
+      style={{ marginBottom: 8 }}
+    >
+      <View style={styles.tenantDetails}>
+        <View style={styles.tenantDetailRow}>
+          <MaterialCommunityIcons name="phone" size={16} color="#6B7280" />
+          <Text style={styles.tenantDetailText}>{tenant.phone}</Text>
+        </View>
+        <View style={styles.tenantDetailRow}>
+          <MaterialCommunityIcons name="card-account-details" size={16} color="#6B7280" />
+          <Text style={styles.tenantDetailText}>CCCD: {tenant.idCard}</Text>
+        </View>
+        <View style={styles.tenantDetailRow}>
+          <MaterialCommunityIcons name="calendar" size={16} color="#6B7280" />
+          <Text style={styles.tenantDetailText}>Bắt đầu: {tenant.startDate}</Text>
+        </View>
+      </View>
+    </Card>
+  );
+};
+
+export const InvoiceCard = ({ invoice, room, tenant, onPress, onEdit, onDelete, onPayment }) => {
+  const getStatusColor = () => {
+    return invoice.status === 'paid' ? '#10B981' : '#F59E0B';
+  };
+
+  const getStatusLabel = () => {
+    return invoice.status === 'paid' ? 'ĐÃ THANH TOÁN' : 'CHƯA THANH TOÁN';
+  };
+
+  const hasActions = onPayment || onEdit || onDelete;
+
+  return (
+    <Card
+      title={`Phòng ${room?.number || 'N/A'}`}
+      subtitle={tenant ? `${tenant.name} - Hóa đơn ${invoice.month}` : `Hóa đơn ${invoice.month}`}
+      onPress={onPress}
+      style={{ marginBottom: 8 }}
+    >
+      <View style={styles.invoiceDetails}>
+        <View style={styles.invoiceHeader}>
+          <View style={styles.invoiceSummary}>
+            <View style={[styles.statusBadge, { backgroundColor: getStatusColor() + '20', borderColor: getStatusColor(), borderWidth: 1 }]}>
+              <Text style={[styles.statusLabel, { color: getStatusColor() }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
+                {getStatusLabel()}
+              </Text>
+            </View>
+            <Text style={styles.amount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.76}>
+              {(invoice.amount || 0).toLocaleString('vi-VN')}đ
+            </Text>
           </View>
-          <View style={styles.infoColumn}>
-            <Text style={styles.title}>Phong {room.number}</Text>
-            <Text style={styles.subtitle}>{room.type}</Text>
+          {hasActions && (
+            <View style={styles.invoiceActionButtons}>
+              {onPayment && (
+                <Pressable onPress={onPayment} style={styles.invoiceIconButton}>
+                  <MaterialCommunityIcons
+                    name={invoice.status === 'paid' ? 'undo' : 'credit-card'}
+                    size={22}
+                    color={invoice.status === 'paid' ? '#F59E0B' : '#10B981'}
+                  />
+                </Pressable>
+              )}
+              {onEdit && (
+                <Pressable onPress={onEdit} style={styles.invoiceIconButton}>
+                  <MaterialCommunityIcons name="pencil" size={22} color="#10B981" />
+                </Pressable>
+              )}
+              {onDelete && (
+                <Pressable onPress={onDelete} style={styles.invoiceIconButton}>
+                  <MaterialCommunityIcons name="delete" size={22} color="#EF4444" />
+                </Pressable>
+              )}
+            </View>
+          )}
+        </View>
+        {tenant && (
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Khách thuê:</Text>
+            <Text style={styles.detailValue}>{tenant.name}</Text>
           </View>
+        )}
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Tiền phòng:</Text>
+          <Text style={styles.detailValue}>{(invoice.amount || 0).toLocaleString('vi-VN')}đ</Text>
         </View>
-        <Badge {...statusMeta} />
-      </View>
-
-      <View style={styles.metaGrid}>
-        <MetaItem icon="cash" label={formatCurrency(room.price)} />
-        <MetaItem icon="ruler-square" label={`${room.area || 0} m2`} />
-        <MetaItem icon="account-group" label={`${room.occupiedSlots || 0}/${room.capacity || 1} nguoi`} />
-        <MetaItem icon="layers" label={`Tang ${room.floor || 1}`} />
-      </View>
-
-      <ActionRow
-        actions={[
-          onView && { label: 'Chi tiet', icon: 'eye-outline', onPress: onView },
-          onEdit && { label: 'Sua', icon: 'pencil-outline', onPress: onEdit },
-          onDelete && { label: 'Xoa', icon: 'trash-can-outline', onPress: onDelete, variant: 'danger' },
-        ]}
-      />
-    </Card>
-  );
-};
-
-export const TenantCard = ({ tenant, room, onView, onEdit, onDelete }) => {
-  const statusMeta = getTenantStatusMeta(tenant.status);
-
-  return (
-    <Card>
-      <View style={styles.headerRow}>
-        <View style={styles.leadingRow}>
-          <Avatar.Text
-            size={48}
-            label={(tenant.name || '?').slice(0, 1).toUpperCase()}
-            style={{ backgroundColor: '#DBEAFE' }}
-            color="#1D4ED8"
-          />
-          <View style={styles.infoColumn}>
-            <Text style={styles.title}>{tenant.name}</Text>
-            <Text style={styles.subtitle}>Phong {room?.number || 'N/A'}</Text>
+        {invoice.electricity > 0 && (
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Tiền điện:</Text>
+            <Text style={styles.detailValue}>{(invoice.electricity || 0).toLocaleString('vi-VN')}đ</Text>
           </View>
-        </View>
-        <Badge {...statusMeta} />
+        )}
+        {invoice.water > 0 && (
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Tiền nước:</Text>
+            <Text style={styles.detailValue}>{(invoice.water || 0).toLocaleString('vi-VN')}đ</Text>
+          </View>
+        )}
       </View>
-
-      <View style={styles.detailList}>
-        <DetailRow icon="phone" value={tenant.phone || 'Chua cap nhat'} />
-        <DetailRow icon="card-account-details-outline" value={tenant.idCard || 'Chua cap nhat'} />
-        <DetailRow icon="calendar-start" value={`Bat dau: ${formatAppDate(tenant.startDate) || 'N/A'}`} />
-      </View>
-
-      <ActionRow
-        actions={[
-          onView && { label: 'Chi tiet', icon: 'eye-outline', onPress: onView },
-          onEdit && { label: 'Sua', icon: 'pencil-outline', onPress: onEdit },
-          onDelete && { label: 'Xoa', icon: 'trash-can-outline', onPress: onDelete, variant: 'danger' },
-        ]}
-      />
     </Card>
   );
 };
 
-export const InvoiceCard = ({ invoice, room, tenant, onEdit, onDelete, onPayment }) => {
-  const statusMeta = getInvoiceStatusMeta(invoice.status);
-  const totalAmount = (invoice.amount || 0) + (invoice.electricity || 0) + (invoice.water || 0);
+export const ContractCard = ({ contract, tenant, room, onPress, onEdit, onDelete, onRenew }) => {
+  const getStatusColor = () => {
+    switch (contract.status) {
+      case 'active':
+        return '#10B981';
+      case 'expired':
+        return '#EF4444';
+      case 'expiring':
+        return '#F59E0B';
+      default:
+        return '#6B7280';
+    }
+  };
+
+  const getStatusLabel = () => {
+    switch (contract.status) {
+      case 'active':
+        return 'CÒN HẠN';
+      case 'expired':
+        return 'HẾT HẠN';
+      case 'expiring':
+        return 'SẮP HẾT HẠN';
+      default:
+        return contract.status;
+    }
+  };
 
   return (
-    <Card>
-      <View style={styles.headerRow}>
-        <View style={styles.infoColumn}>
-          <Text style={styles.title}>Hoa don {invoice.month}</Text>
-          <Text style={styles.subtitle}>
-            Phong {room?.number || 'N/A'}{tenant?.name ? ` - ${tenant.name}` : ''}
-          </Text>
+    <Card
+      title={tenant?.name || 'N/A'}
+      subtitle={`Phòng ${room?.number || 'N/A'}`}
+      onPress={onPress}
+      rightActions={
+        <View style={styles.actionButtons}>
+          {contract.status === 'active' && onRenew && (
+            <Pressable onPress={onRenew} style={styles.iconButton}>
+              <MaterialCommunityIcons name="refresh" size={24} color="#3B82F6" />
+            </Pressable>
+          )}
+          {onEdit && (
+            <Pressable onPress={onEdit} style={styles.iconButton}>
+              <MaterialCommunityIcons name="pencil" size={24} color="#10B981" />
+            </Pressable>
+          )}
+          {onDelete && (
+            <Pressable onPress={onDelete} style={styles.iconButton}>
+              <MaterialCommunityIcons name="delete" size={24} color="#EF4444" />
+            </Pressable>
+          )}
         </View>
-        <Badge {...statusMeta} />
+      }
+      style={{ marginBottom: 8 }}
+    >
+      <View style={styles.contractDetails}>
+        <View style={[styles.statusBadge, { backgroundColor: getStatusColor() + '20', borderColor: getStatusColor(), borderWidth: 1, alignSelf: 'flex-start' }]}>
+          <Text style={[styles.statusLabel, { color: getStatusColor() }]}>{getStatusLabel()}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>HẠN ĐẾN</Text>
+          <Text style={styles.detailValue}>{contract.endDate}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>TIỀN PHÒNG</Text>
+          <Text style={styles.detailValue}>{(contract.amount || 0).toLocaleString('vi-VN')}đ</Text>
+        </View>
       </View>
-
-      <View style={styles.metaGrid}>
-        <MetaItem icon="cash-multiple" label={formatCurrency(totalAmount)} />
-        <MetaItem icon="home-outline" label={`Tien phong ${formatCurrency(invoice.amount || 0)}`} />
-        <MetaItem icon="lightning-bolt" label={formatCurrency(invoice.electricity || 0)} />
-        <MetaItem icon="water" label={formatCurrency(invoice.water || 0)} />
-      </View>
-      <DetailRow icon="calendar-clock" value={`Han thanh toan: ${formatAppDate(invoice.dueDate) || 'N/A'}`} />
-
-      <ActionRow
-        actions={[
-          onPayment && {
-            label: invoice.status === 'paid' ? 'Bo da tra' : 'Da tra',
-            icon: invoice.status === 'paid' ? 'close-circle-outline' : 'check-circle-outline',
-            onPress: onPayment,
-            variant: invoice.status === 'paid' ? 'secondary' : 'success',
-          },
-          onEdit && { label: 'Sua', icon: 'pencil-outline', onPress: onEdit },
-          onDelete && { label: 'Xoa', icon: 'trash-can-outline', onPress: onDelete, variant: 'danger' },
-        ]}
-      />
     </Card>
   );
 };
-
-export const ContractCard = ({ contract, room, tenant, onEdit, onDelete, onRenew }) => {
-  const statusMeta = getContractStatusMeta(contract.status);
-
-  return (
-    <Card>
-      <View style={styles.headerRow}>
-        <View style={styles.infoColumn}>
-          <Text style={styles.title}>Hop dong phong {room?.number || 'N/A'}</Text>
-          <Text style={styles.subtitle}>{tenant?.name || 'Khach thue'}</Text>
-        </View>
-        <Badge {...statusMeta} />
-      </View>
-
-      <View style={styles.detailList}>
-        <DetailRow icon="calendar-start" value={`Bat dau: ${formatAppDate(contract.startDate) || 'N/A'}`} />
-        <DetailRow icon="calendar-end" value={`Ket thuc: ${formatAppDate(contract.endDate) || 'N/A'}`} />
-        <DetailRow icon="cash" value={`Gia thue: ${formatCurrency(contract.amount || 0)}`} />
-      </View>
-
-      <ActionRow
-        actions={[
-          onRenew && { label: 'Gia han', icon: 'calendar-refresh', onPress: onRenew, variant: 'secondary' },
-          onEdit && { label: 'Sua', icon: 'pencil-outline', onPress: onEdit },
-          onDelete && { label: 'Xoa', icon: 'trash-can-outline', onPress: onDelete, variant: 'danger' },
-        ]}
-      />
-    </Card>
-  );
-};
-
-const MetaItem = ({ icon, label }) => (
-  <View style={styles.metaItem}>
-    <MaterialCommunityIcons name={icon} size={16} color="#6B7280" />
-    <Text style={styles.metaText}>{label}</Text>
-  </View>
-);
-
-const DetailRow = ({ icon, value }) => (
-  <View style={styles.detailRow}>
-    <MaterialCommunityIcons name={icon} size={16} color="#6B7280" />
-    <Text style={styles.detailText}>{value}</Text>
-  </View>
-);
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     marginHorizontal: 12,
-    marginVertical: 6,
-    padding: 14,
-    borderRadius: 14,
+    marginVertical: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
-    shadowRadius: 6,
+    shadowRadius: 10,
     elevation: 3,
-    gap: 12,
+    overflow: 'hidden',
   },
-  headerRow: {
+  container: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: 12,
+    padding: 16,
   },
-  leadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+  content: {
     flex: 1,
-  },
-  iconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#DBEAFE',
-  },
-  infoColumn: {
-    flex: 1,
-    gap: 4,
+    minWidth: 0,
   },
   title: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
     color: '#1F2937',
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 13,
     color: '#6B7280',
+    marginBottom: 4,
   },
-  badge: {
+  actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    justifyContent: 'flex-end',
+    marginLeft: 10,
+    maxWidth: 128,
   },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  metaGrid: {
+  actionButtons: {
     flexDirection: 'row',
+    gap: 6,
+    alignItems: 'center',
     flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+  },
+  iconButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EEF3FF',
+  },
+  roomDetails: {
+    marginTop: 8,
+    gap: 6,
+  },
+  tenantDetails: {
+    marginTop: 8,
+    gap: 6,
+  },
+  tenantDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
-  metaItem: {
-    minWidth: '47%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  metaText: {
+  tenantDetailText: {
+    flex: 1,
+    minWidth: 0,
     fontSize: 12,
-    color: '#374151',
-    flexShrink: 1,
+    color: '#1F2937',
+    fontWeight: '500',
   },
-  detailList: {
+  invoiceDetails: {
+    marginTop: 8,
+    gap: 6,
+  },
+  contractDetails: {
+    marginTop: 8,
     gap: 8,
   },
   detailRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     gap: 8,
   },
-  detailText: {
-    fontSize: 13,
-    color: '#4B5563',
-    flex: 1,
+  detailLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
   },
-  actionRow: {
+  detailValue: {
+    fontSize: 12,
+    color: '#1F2937',
+    fontWeight: '500',
+    flexShrink: 1,
+    textAlign: 'right',
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
+  },
+  statusLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  amount: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1F2937',
+    flexShrink: 1,
+    minWidth: 92,
+  },
+  invoiceHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     flexWrap: 'wrap',
     gap: 8,
+  },
+  invoiceSummary: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  invoiceActionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flexShrink: 0,
+    gap: 6,
+  },
+  invoiceIconButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EEF3FF',
   },
 });
