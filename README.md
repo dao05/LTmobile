@@ -104,11 +104,8 @@ Project được phát triển bằng React Native kết hợp Expo, có thể c
 
 ## 7.2. Giao diện trang chủ
 
-- Giao diện trang chủ Admin:
-
 <img width="1170" height="2532" alt="Trang chủ admin" src="https://github.com/user-attachments/assets/9c5b7d19-bd48-4151-b7be-1a37f99c0a52" />
 
-- Giao diện trang chủ Manager:
 
 <img width="1170" height="2532" alt="Trang chủ manager" src="https://github.com/user-attachments/assets/330afa55-5ede-4cdc-a20b-4787161d0e76" />
 
@@ -160,11 +157,7 @@ Project được phát triển bằng React Native kết hợp Expo, có thể c
 
 ## 7.8. Giao diện báo cáo
 
-- Báo cáo doanh thu:
-
 <img width="1170" height="2532" alt="Báo cáo doanh thu" src="https://github.com/user-attachments/assets/99070627-7a87-41b5-9c08-f9a4e3842926" />
-
-- Báo cáo hệ thống:
 
 <img width="1170" height="2532" alt="Báo cáo hệ thống" src="https://github.com/user-attachments/assets/552ac9f1-dde6-49ed-85af-2f2a6934b151" />
 
@@ -176,11 +169,7 @@ Project được phát triển bằng React Native kết hợp Expo, có thể c
 
 ## 7.10. Giao diện người dùng
 
-- Thông tin người dùng:
-
 <img width="1170" height="2532" alt="Thông tin người dùng" src="https://github.com/user-attachments/assets/21187024-ca3d-4413-b50a-9d7fb9042842" />
-
-- Cập nhật thông tin người dùng:
 
 <img width="1170" height="2532" alt="Cập nhật thông tin người dùng" src="https://github.com/user-attachments/assets/d0df2e1d-4e52-4590-ad36-90142ed637cf" />
 
